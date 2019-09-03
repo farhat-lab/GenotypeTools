@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
-import ruamel.yaml as yaml
-from evcouplings.utils import valid_file, verify_resources, run
-import os
+
+"""
+Tools for creating a matrix of strains by genomes. Inspired by EVCouplings/align/alignment.py. 
+Anna G. Green
+"""
 
 ALPHABET_NOGAP = "ACGT"
 GAP_CHAR = "-"
@@ -84,12 +86,11 @@ class GenotypeMatrix:
         self._frequencies = None
         self._major_alleles = None
 
-
-
     @classmethod
     def from_df(cls, file):
         """
-
+        Initializes a GenotypeMatrix using an input pd.DataFrame, where rows = strains and columns=positions, and
+        the data will become the contents of self.matrix
         """
         df = pd.read_csv(file, index_col=0, header=0)
 
