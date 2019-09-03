@@ -1,10 +1,14 @@
-import pandas as pd
-import numpy as np
-
 """
-Tools for creating a matrix of strains by genomes. Inspired by EVCouplings/align/alignment.py. 
+Tools for creating a matrix of strains by genomes. 
+The GenotypeMatrix class is inspired by and modified from EVCouplings/align Alignment class, 
+which is (c) 2017 EVcouplings development team and freely available under the MIT license
+
+Authors:
 Anna G. Green
 """
+
+import pandas as pd
+import numpy as np
 
 ALPHABET_NOGAP = "ACGT"
 GAP_CHAR = "-"
