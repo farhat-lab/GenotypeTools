@@ -226,8 +226,8 @@ class GenotypeMatrix:
             seq = "".join(self.matrix[self.strain_to_index[strain],:])
             fileobj.write(f"{strain}\n>{seq}\n")
 
-    def write_GEMMA(self, fileobj, major_allele_string="A", minor_allele_string="T",
-        major_allele_code='1', minor_allele_code='0',gap_code="NaN"):
+    def write_GEMMA(self, fileobj, major_allele_string="\"A\"", minor_allele_string="TRUE",
+        major_allele_code='1', minor_allele_code='0',gap_code="NA"):
         """
         Creates a file of loci in correct input format for GEMMA
 
