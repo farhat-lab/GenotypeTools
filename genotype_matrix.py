@@ -129,13 +129,15 @@ class GenotypeMatrix:
             self.matrix[: , self.position_to_index[position]] = allele
 
         # iterate through each strain
-        for strain in self.strains:
+        strain_group = self.genotype_data.query("STRAIN in @self.strains").groupby("STRAIN")
+
+
+        for strain, subset in strain_group.groups()
             print(strain)
-            subset = self.genotype_data.query("STRAIN == @strain")
 
             # iterate through each position
-            for position in self.positions:
-                subsubset = subset.query("POS == @position")
+            position_groups = subset.groupby("POS")
+            for position, subsubset in position_groups.groups():
 
                 assert(len(subsubset) < 2)
 
