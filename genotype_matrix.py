@@ -1,6 +1,6 @@
 """
-Tools for creating a matrix of strains by genomes. 
-The GenotypeMatrix class is inspired by and modified from EVCouplings/align Alignment class, 
+Tools for creating a matrix of strains by genomes.
+The GenotypeMatrix class is inspired by and modified from EVCouplings/align Alignment class,
 which is (c) 2017 EVcouplings development team and freely available under the MIT license
 
 Authors:
@@ -229,8 +229,8 @@ class GenotypeMatrix:
             seq = "".join(self.matrix[self.strain_to_index[strain],:])
             fileobj.write(f"{strain}\n>{seq}\n")
 
-    def write_GEMMA(self, fileobj, major_allele_string="\"A\"", minor_allele_string="TRUE",
-        major_allele_code='1', minor_allele_code='0',gap_code="NA"):
+    def write_GEMMA(self, fileobj, positions=None, major_allele_string="A", minor_allele_string="T",
+        major_allele_code='1', minor_allele_code='0',gap_code="NaN"):
         """
         Creates a file of loci in correct input format for GEMMA
 
@@ -244,6 +244,8 @@ class GenotypeMatrix:
         ----------
         fileobj: filehandle
             file to which to write
+        positions: list of str, optional (default None)
+            if provided, subset of positions which to write to the file
         major_allele_string: str, optional (default "A")
             string used to represent the major allele
         minor_allele_string: str, optional (default "T")
@@ -258,7 +260,10 @@ class GenotypeMatrix:
         """
         self.__ensure_mapped_matrix()
 
-        for position in self.positions:
+        if positions is None:
+            positions = self.positions
+
+        for position in positions:
             # slice corresponding to all strains
             vec = self.matrix_mapped[:, self.position_to_index[position]]
 
