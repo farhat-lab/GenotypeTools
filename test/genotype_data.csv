@@ -1,0 +1,10 @@
+STRAIN,POS,REF,ALT,QUAL
+first,123,A,G,0
+second,123,A,G,0
+third,123,A,G,0
+fourth,124,A,C,1
+fourth,150,C,G,1
+fourth,176,G,T,1
+fourth,189,T,A,0
+fourth,10001,T,A,1
+fifth,189,T,A,1

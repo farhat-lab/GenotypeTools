@@ -227,7 +227,7 @@ class GenotypeMatrix:
 
         for strain in strain_list:
             seq = "".join(self.matrix[self.strain_to_index[strain],:])
-            fileobj.write(f"{strain}\n>{seq}\n")
+            fileobj.write(f">{strain}\n{seq}\n")
 
     def write_GEMMA(self, fileobj, major_allele_string="\"A\"", minor_allele_string="TRUE",
         major_allele_code='0', minor_allele_code='1',gap_code="NA"):
