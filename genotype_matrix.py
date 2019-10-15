@@ -1,6 +1,6 @@
 """
-Tools for creating a matrix of strains by genomes.
-The GenotypeMatrix class is inspired by and modified from EVCouplings/align Alignment class,
+Tools for creating a matrix of strains by genomes. 
+The GenotypeMatrix class is inspired by and modified from EVCouplings/align Alignment class, 
 which is (c) 2017 EVcouplings development team and freely available under the MIT license
 
 Authors:
@@ -122,25 +122,25 @@ class GenotypeMatrix:
         np.ndarray:
             an N_strains x N_positions array of strings
         '''
+        print("preparing the reference")
 
-        for position in self.positions:
-            subset = self.genotype_data.query("POS==@position")
+        position_subset = self.genotype_data.query("POS in @self.positions")
+
+        position_groups = position_subset.groupby("POS")
+        for position, subset in position_groups:
             allele = subset.loc[subset.index[0], "REF"]
             self.matrix[: , self.position_to_index[position]] = allele
 
         # iterate through each strain
-        strain_group = self.genotype_data.query("STRAIN in @self.strains").groupby("STRAIN")
-
+        print("filling in the isolate genotypes")
+        strain_group = position_subset.query("STRAIN in @self.strains").groupby("STRAIN")
 
         for strain, subset in strain_group:
             print(strain)
 
             # iterate through each position
-            subset = subset.query("POS in @self.positions")
             position_groups = subset.groupby("POS")
             for position, subsubset in position_groups:
-
-                assert(len(subsubset) < 2)
 
                 # if we didn't find any information for this position, leave as reference allele
                 if len(subsubset) == 0:
@@ -229,8 +229,8 @@ class GenotypeMatrix:
             seq = "".join(self.matrix[self.strain_to_index[strain],:])
             fileobj.write(f">{strain}\n{seq}\n")
 
-    def write_GEMMA(self, fileobj, positions=None, major_allele_string="A", minor_allele_string="T",
-        major_allele_code='1', minor_allele_code='0',gap_code="NaN"):
+    def write_GEMMA(self, fileobj, major_allele_string="\"A\"", minor_allele_string="TRUE",
+        major_allele_code='0', minor_allele_code='1',gap_code="NA"):
         """
         Creates a file of loci in correct input format for GEMMA
 
@@ -244,8 +244,6 @@ class GenotypeMatrix:
         ----------
         fileobj: filehandle
             file to which to write
-        positions: list of str, optional (default None)
-            if provided, subset of positions which to write to the file
         major_allele_string: str, optional (default "A")
             string used to represent the major allele
         minor_allele_string: str, optional (default "T")
@@ -260,10 +258,7 @@ class GenotypeMatrix:
         """
         self.__ensure_mapped_matrix()
 
-        if positions is None:
-            positions = self.positions
-
-        for position in positions:
+        for position in self.positions:
             # slice corresponding to all strains
             vec = self.matrix_mapped[:, self.position_to_index[position]]
 
