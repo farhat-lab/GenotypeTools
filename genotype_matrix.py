@@ -1,6 +1,6 @@
 """
-Tools for creating a matrix of strains by genomes. 
-The GenotypeMatrix class is inspired by and modified from EVCouplings/align Alignment class, 
+Tools for creating a matrix of strains by genomes.
+The GenotypeMatrix class is inspired by and modified from EVCouplings/align Alignment class,
 which is (c) 2017 EVcouplings development team and freely available under the MIT license
 
 Authors:
@@ -54,6 +54,65 @@ def calculate_frequencies(matrix, num_symbols):
         for i in range(L):
             fi[i, matrix[s, i]] += 1
     return np.divide(fi, N)
+
+def calculate_major_allele_matrix(matrix, major_alleles, encode_gaps=True, gap_code=np.nan,
+        major_allele_code=0, minor_allele_code=1):
+    """
+    Encodes a mapped genotype matrix with major and minor alleles
+    NOTE: This function currently only works for 5-character (with gaps) alphabet
+
+    ----------
+    matrix : np.array
+        N x L matrix containing N sequences of length L.
+        Matrix must be mapped to range(0, num_symbols) using
+        map_matrix function
+    major_alleles : np.array
+        1 x L matrix with oding of major allele for each position in L
+    encode_gaps: boolean, optional (default=True)
+        If True, gaps will be fille with gap_code. If False, gaps will be
+        eliminated (ie, replaced with the major allele code)
+    gap_code: str or numeric, optional (default=np.nan)
+        encoding to use for gap characters if nogap=False
+    major_allele_code: str or numeric, optional (default=0)
+        encoding to use for major alleles
+    minor_allele_code: str or numeric, optional (default=1)
+        encoding to use for minor alleles
+
+    Returns
+    -------
+    np.array
+        Matrix of size N x L with major/minor allele encoding
+        for all positions in L
+    """
+
+    if encode_gaps:
+        gap_code=gap_code
+    else:
+        gap_code=major_allele_code
+
+    encoded_matrix = np.zeros(shape=matrix.shape, dtype=object)
+
+    # For each column
+    for i in np.arange(0, encoded_matrix.shape[1]):
+
+        #grab that column
+        vec = encoded_matrix[:, i]
+
+        # create an encoded version of the column, with minor allele code as default
+        encoded_vec = np.array([minor_allele_code] * len(vec), dtype=object)
+
+        # If the row has a major allele, replace in encoded vec
+        is_major_allele = np.equal(vec, major_alleles[i])
+        encoded_vec[is_major_allele] = major_allele_code
+
+        # If the row has a gap character, replace in encoded vec
+        is_gap = np.equal(vec, 0)
+        encoded_vec[is_gap] = gap_code
+
+        # save in the encoded matrix
+        encoded_matrix[:, i] = encoded_vec
+
+    return encoded_matrix
 
 class GenotypeMatrix:
     """
@@ -258,16 +317,18 @@ class GenotypeMatrix:
         """
         self.__ensure_mapped_matrix()
 
+        major_allele_matrix = calculate_major_allele_matrix(
+            gm.matrix_mapped,
+            gm.major_alleles,
+            encode_gaps=True,
+            gap_code=gap_code,
+            major_allele_code=major_allele_code,
+            minor_allele_code=minor_allele_code
+        )
+
         for position in self.positions:
             # slice corresponding to all strains
-            vec = self.matrix_mapped[:, self.position_to_index[position]]
-
-            is_major_allele = np.equal(vec, self.major_alleles[self.position_to_index[position]])
-            is_gap = np.equal(vec, 0)
-
-            string = np.array([minor_allele_code] * len(vec), dtype=object)
-            string[is_major_allele] = major_allele_code
-            string[is_gap] = gap_code
+            vec = major_allele_matrix[:, self.position_to_index[position]]
 
             fileobj.write(f'{position},{major_allele_string},{minor_allele_string},{",".join(string)}\n')
 
