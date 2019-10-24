@@ -96,7 +96,7 @@ def calculate_major_allele_matrix(matrix, major_alleles, encode_gaps=True, gap_c
     for i in np.arange(0, encoded_matrix.shape[1]):
 
         #grab that column
-        vec = encoded_matrix[:, i]
+        vec = matrix[:, i]
 
         # create an encoded version of the column, with minor allele code as default
         encoded_vec = np.array([minor_allele_code] * len(vec), dtype=object)
@@ -288,7 +288,7 @@ class GenotypeMatrix:
             seq = "".join(self.matrix[self.strain_to_index[strain],:])
             fileobj.write(f">{strain}\n{seq}\n")
 
-    def write_GEMMA(self, fileobj, major_allele_string="\"A\"", minor_allele_string="TRUE",
+    def write_GEMMA(self, fileobj, positions=None, major_allele_string="\"A\"", minor_allele_string="TRUE",
         major_allele_code='0', minor_allele_code='1',gap_code="NA"):
         """
         Creates a file of loci in correct input format for GEMMA
@@ -303,6 +303,8 @@ class GenotypeMatrix:
         ----------
         fileobj: filehandle
             file to which to write
+        positions: list of str, optional (default: None)
+            specify subset of positions to write. If None, use all positions
         major_allele_string: str, optional (default "A")
             string used to represent the major allele
         minor_allele_string: str, optional (default "T")
@@ -315,22 +317,26 @@ class GenotypeMatrix:
             string used to code for the gap/missing data in the input
 
         """
+
+        if positions is None:
+            positions = self.positions
+
         self.__ensure_mapped_matrix()
 
         major_allele_matrix = calculate_major_allele_matrix(
-            gm.matrix_mapped,
-            gm.major_alleles,
+            self.matrix_mapped,
+            self.major_alleles,
             encode_gaps=True,
             gap_code=gap_code,
             major_allele_code=major_allele_code,
             minor_allele_code=minor_allele_code
         )
 
-        for position in self.positions:
+        for position in positions:
             # slice corresponding to all strains
             vec = major_allele_matrix[:, self.position_to_index[position]]
 
-            fileobj.write(f'{position},{major_allele_string},{minor_allele_string},{",".join(string)}\n')
+            fileobj.write(f'{position},{major_allele_string},{minor_allele_string},{",".join(vec)}\n')
 
     def to_df(self):
         """

@@ -8,7 +8,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-
+from evcouplings.utils import valid_file, verify_resources, run
+from GenotypeTools.genotype_matrix import *
 def prepare_phenotpye_file(prefix, phenotype_file, strain_file, outcfg):
     """
     Prepare input phenotype file for GEMMA
@@ -95,7 +96,7 @@ def prepare_loci_file(prefix, genotype_file,
 
     return outcfg
 
-def execute(incfg,  **kwargs):
+def execute_GEMMA(incfg,  **kwargs):
     """
     Command line wrapper for executing GEMMA
     """
