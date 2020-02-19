@@ -9,6 +9,7 @@ Anna G. Green
 
 import pandas as pd
 import numpy as np
+from copy import deepcopy
 
 ALPHABET_NOGAP = "ACGT"
 GAP_CHAR = "-"
@@ -55,10 +56,10 @@ def calculate_frequencies(matrix, num_symbols):
             fi[i, matrix[s, i]] += 1
     return np.divide(fi, N)
 
-def calculate_major_allele_matrix(matrix, major_alleles, encode_gaps=True, gap_code=np.nan,
-        major_allele_code=0, minor_allele_code=1):
+def calculate_reference_allele_matrix(matrix, reference_alleles, encode_gaps=True, gap_code=np.nan,
+        ref_allele_code=0, non_ref_allele_code=1):
     """
-    Encodes a mapped genotype matrix with major and minor alleles
+    Encodes a mapped genotype matrix with reference and non-reference allele codes
     NOTE: This function currently only works for 5-character (with gaps) alphabet
 
     ----------
@@ -66,29 +67,29 @@ def calculate_major_allele_matrix(matrix, major_alleles, encode_gaps=True, gap_c
         N x L matrix containing N sequences of length L.
         Matrix must be mapped to range(0, num_symbols) using
         map_matrix function
-    major_alleles : np.array
-        1 x L matrix with oding of major allele for each position in L
+    reference_alleles : np.array
+        1 x L matrix with coding of reference allele for each position in L
     encode_gaps: boolean, optional (default=True)
         If True, gaps will be fille with gap_code. If False, gaps will be
         eliminated (ie, replaced with the major allele code)
     gap_code: str or numeric, optional (default=np.nan)
         encoding to use for gap characters if nogap=False
-    major_allele_code: str or numeric, optional (default=0)
+    ref_allele_code: str or numeric, optional (default=0)
         encoding to use for major alleles
-    minor_allele_code: str or numeric, optional (default=1)
+    non_ref_allele_code: str or numeric, optional (default=1)
         encoding to use for minor alleles
 
     Returns
     -------
     np.array
-        Matrix of size N x L with major/minor allele encoding
+        Matrix of size N x L with reference/non-reference allele encoding
         for all positions in L
     """
 
     if encode_gaps:
         gap_code=gap_code
     else:
-        gap_code=major_allele_code
+        gap_code=ref_allele_code
 
     encoded_matrix = np.zeros(shape=matrix.shape, dtype=object)
 
@@ -97,14 +98,14 @@ def calculate_major_allele_matrix(matrix, major_alleles, encode_gaps=True, gap_c
 
         #grab that column
         vec = matrix[:, i]
-
+        print(vec)
         # create an encoded version of the column, with minor allele code as default
-        encoded_vec = np.array([minor_allele_code] * len(vec), dtype=object)
+        encoded_vec = np.array([non_ref_allele_code] * len(vec), dtype=object)
 
         # If the row has a major allele, replace in encoded vec
-        is_major_allele = np.equal(vec, major_alleles[i])
-        encoded_vec[is_major_allele] = major_allele_code
-
+        is_ref_allele = np.equal(vec, reference_alleles[i])
+        encoded_vec[is_ref_allele] = ref_allele_code
+        print(reference_alleles[i], encoded_vec)
         # If the row has a gap character, replace in encoded vec
         is_gap = np.equal(vec, 0)
         encoded_vec[is_gap] = gap_code
@@ -148,6 +149,7 @@ class GenotypeMatrix:
         self.matrix_mapped = None
         self._frequencies = None
         self._major_alleles = None
+        self.reference_alleles = None
 
     @classmethod
     def from_df(cls, file):
@@ -188,7 +190,10 @@ class GenotypeMatrix:
         position_groups = position_subset.groupby("POS")
         for position, subset in position_groups:
             allele = subset.loc[subset.index[0], "REF"]
-            self.matrix[: , self.position_to_index[position]] = allele
+            self.matrix[:, self.position_to_index[position]] = allele
+
+        self.reference_alleles = deepcopy(self.matrix[0, :])
+        print("assigned the reference", self.reference_alleles)
 
         # iterate through each strain
         print("filling in the isolate genotypes")
@@ -323,13 +328,15 @@ class GenotypeMatrix:
 
         self.__ensure_mapped_matrix()
 
-        major_allele_matrix = calculate_major_allele_matrix(
+        reference_alleles = [self.alphabet_map[x] for x in self.reference_alleles]
+
+        major_allele_matrix = calculate_reference_allele_matrix(
             self.matrix_mapped,
-            self.major_alleles,
+            reference_alleles,
             encode_gaps=True,
             gap_code=gap_code,
-            major_allele_code=major_allele_code,
-            minor_allele_code=minor_allele_code
+            ref_allele_code=major_allele_code,
+            non_ref_allele_code=minor_allele_code
         )
 
         for position in positions:
